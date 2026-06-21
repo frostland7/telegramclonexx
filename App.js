@@ -1,36 +1,46 @@
+/**
+ * Main Application Controller
+ */
+
 const App = {
     activeChatId: null,
+    currentUser: "user_123", // В реальности берется из Telegram WebApp initData
 
-    init() {
-        UI.renderChats(DB.chats);
-        if(window.Telegram?.WebApp) {
-            window.Telegram.WebApp.ready();
-            window.Telegram.WebApp.expand();
-        }
+    async init() {
+        API.init();
+        console.log("System Initialized");
+        
+        // Загружаем чаты через API
+        const chats = await API.getChats(this.currentUser);
+        UI.renderChats(chats);
     },
 
-    openChat(id, name) {
+    openChat(id, title) {
         this.activeChatId = id;
-        document.getElementById('chat-title').innerText = name;
-        UI.renderMessages(DB.msgs[id] || []);
+        document.getElementById('chat-title').innerText = title;
+        
+        // Подписываемся на поток сообщений
+        API.subscribeToMessages(id, (msgs) => {
+            UI.renderMessages(msgs, this.currentUser);
+        });
+        
         UI.navigate('chat');
     },
 
-    sendMessage() {
+    async sendMessage() {
         const input = document.getElementById('msg-input');
-        if(!input.value) return;
-        
-        if(!DB.msgs[this.activeChatId]) DB.msgs[this.activeChatId] = [];
-        
-        DB.msgs[this.activeChatId].push({
-            text: input.value,
-            from: 'me',
-            time: new Date().toLocaleTimeString()
-        });
-        
+        if (!input.value.trim()) return;
+
+        const msgPayload = {
+            text: Utils.sanitize(input.value),
+            from: this.currentUser,
+            time: Utils.formatTime(Date.now())
+        };
+
+        await API.sendMessage(this.activeChatId, msgPayload);
         input.value = '';
-        UI.renderMessages(DB.msgs[this.activeChatId]);
     }
 };
 
+// Запуск
 document.addEventListener('DOMContentLoaded', () => App.init());
