@@ -3,314 +3,378 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>xgram Beta</title>
+    <title>xgram Realtime Beta</title>
     <style>
-        :root {
-            --tg-theme-bg: #0e1621;
-            --tg-theme-text: #ffffff;
-            --tg-theme-hint: #708499;
-            --tg-theme-button: #2481cc;
-            --tg-theme-item-bg: #17212b;
-        }
+        /* Палитра мягких тем */
+        :root { --bg: #0e1621; --item-bg: #17212b; --text: #ffffff; --hint: #708499; --accent: #2481cc; }
+        .theme-dark { --bg: #0e1621; --item-bg: #17212b; --text: #ffffff; --hint: #708499; --accent: #2481cc; }
+        .theme-light { --bg: #f4f5f7; --item-bg: #ffffff; --text: #000000; --hint: #7a7a7a; --accent: #3390ec; }
+        .theme-blue { --bg: #182533; --item-bg: #202b36; --text: #f5f5f5; --hint: #7e91a4; --accent: #5288c1; }
+        .theme-grape { --bg: #1a1523; --item-bg: #251f32; --text: #f1ecf7; --hint: #9a8ba5; --accent: #a176c9; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; transition: all 0.2s ease; }
+        
+        header { background: var(--item-bg); padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.2); font-size: 18px; font-weight: bold; }
+        .admin-badge { background: #e53935; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; font-weight: normal; }
+        
+        .container { flex: 1; overflow-y: auto; padding-bottom: 65px; position: relative; }
+        .page { display: none; padding: 15px; height: 100%; }
+        .page.active { display: flex; flex-direction: column; }
 
-        body {
-            background-color: var(--tg-theme-bg);
-            color: var(--tg-theme-text);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
+        /* Экраны */
+        .auth-box { display: flex; flex-direction: column; gap: 15px; justify-content: center; height: 100%; max-width: 350px; margin: 0 auto; }
+        .item-card { background: var(--item-bg); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; cursor: pointer; }
+        
+        .avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; position: relative; }
+        .premium-badge { position: absolute; bottom: -2px; right: -2px; font-size: 12px; background: rgba(0,0,0,0.4); border-radius: 50%; padding: 1px; }
+        
+        .btn { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 10px; font-size: 15px; cursor: pointer; width: 100%; }
+        .btn:active { opacity: 0.8; }
+        input, select, textarea { width: 100%; padding: 12px; background: var(--item-bg); border: 1px solid rgba(255,255,255,0.1); color: var(--text); border-radius: 10px; margin-top: 5px; font-size: 15px; }
+        .theme-light input, .theme-light select, .theme-light textarea { border: 1px solid #ccc; }
+        
+        /* Сообщения */
+        .chat-messages { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .msg { max-width: 75%; padding: 10px 14px; border-radius: 15px; font-size: 15px; line-height: 1.4; word-break: break-word; }
+        .msg.out { background: var(--accent); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .msg.in { background: var(--item-bg); color: var(--text); align-self: flex-start; border-bottom-left-radius: 2px; }
+        .chat-input-area { display: flex; gap: 8px; padding: 10px; background: var(--item-bg); }
 
-        /* Шапка */
-        header {
-            background-color: var(--tg-theme-item-bg);
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #101921;
-            font-size: 20px;
-            font-weight: bold;
-        }
+        /* Меню навигации */
+        nav { position: fixed; bottom: 0; width: 100%; background: var(--item-bg); display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid rgba(0,0,0,0.1); }
+        .nav-item { color: var(--hint); display: flex; flex-direction: column; align-items: center; font-size: 11px; cursor: pointer; width: 50%; }
+        .nav-item.active { color: var(--accent); }
 
-        .admin-btn {
-            background: #e53935;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-
-        /* Контент и вкладки */
-        .container {
-            flex: 1;
-            overflow-y: auto;
-            padding-bottom: 60px;
-        }
-
-        .page {
-            display: none;
-            padding: 15px;
-        }
-
-        .page.active {
-            display: block;
-        }
-
-        /* Стили чатов */
-        .chat-item {
-            background: var(--tg-theme-item-bg);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: var(--tg-theme-button);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-
-        /* Кнопки настроек и админки */
-        .btn {
-            background: var(--tg-theme-button);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            width: 100%;
-            margin-top: 10px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: var(--tg-theme-hint);
-        }
-
-        input, select {
-            width: 100%;
-            padding: 10px;
-            background: var(--tg-theme-item-bg);
-            border: 1px solid #24303f;
-            color: white;
-            border-radius: 8px;
-        }
-
-        /* Нижнее меню */
-        nav {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: var(--tg-theme-item-bg);
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            border-top: 1px solid #101921;
-        }
-
-        .nav-item {
-            color: var(--tg-theme-hint);
-            text-decoration: none;
-            font-size: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .nav-item.active {
-            color: var(--tg-theme-button);
-        }
-
-        /* Админ панель модалка */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            z-index: 100;
-        }
-
-        .modal-content {
-            background: var(--tg-theme-item-bg);
-            padding: 20px;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 400px;
-        }
+        /* Модальные окна */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; padding: 20px; z-index: 200; }
+        .modal-content { background: var(--item-bg); padding: 20px; border-radius: 16px; width: 100%; max-width: 360px; }
     </style>
-</head>
-<body>
 
-    <header>
-        <span id="header-title">xgram</span>
-        <button class="admin-btn" onclick="openAdmin()">Admin</button>
-    </header>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, get, child, update, onValue, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    <div class="container">
-        <div id="chats-page" class="page active">
-            <div class="chat-item">
-                <div class="avatar">Р</div>
-                <div>
-                    <h4>Разработчик (Ты)</h4>
-                    <p style="color: var(--tg-theme-hint); font-size: 14px;">Добро пожаловать в xgram!</p>
-                </div>
-            </div>
-            <div class="chat-item">
-                <div class="avatar" style="background: #4caf50;">X</div>
-                <div>
-                    <h4>xgram Новости</h4>
-                    <p style="color: var(--tg-theme-hint); font-size: 14px;">Бета-тест запущен успешно.</p>
-                </div>
-            </div>
-        </div>
+        // Твои личные ключи от базы данных
+        const firebaseConfig = {
+            apiKey: "AIzaSyAUFvEAHdIbYvflB7n-DMQXM_ydZcuT35o",
+            authDomain: "jwbsjadh.firebaseapp.com",
+            projectId: "jwbsjadh",
+            storageBucket: "jwbsjadh.firebasestorage.app",
+            messagingSenderId: "796800932618",
+            appId: "1:796800932618:web:042d349bbf6bc9929b78f3",
+            databaseURL: "https://jwbsjadh-default-rtdb.firebaseio.com/"
+        };
 
-        <div id="settings-page" class="page">
-            <h3 style="margin-bottom: 20px;">Настройки аккаунта</h3>
-            <div class="input-group">
-                <label>Имя пользователя</label>
-                <input type="text" id="username-input" value="User_Beta">
-            </div>
-            <div class="input-group">
-                <label>Язык / Language</label>
-                <select id="lang-select" onchange="changeLanguage()">
-                    <option value="ru">Русский</option>
-                    <option value="en">English</option>
-                </select>
-            </div>
-            <button class="btn" onclick="alert('Настройки сохранены!')">Сохранить</button>
+        // Инициализация
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Глобальные переменные в рамках модуля
+        let currentUser = null;
+        let activeChatPartner = null;
+        let currentChatId = null;
+        let authState = 'input';
+
+        // Делаем функции доступными для HTML разметки (onclick)
+        window.toggleAuthFields = toggleAuthFields;
+        window.handleAuthSubmit = handleAuthSubmit;
+        window.switchPage = switchPage;
+        window.changeAppTheme = changeAppTheme;
+        window.saveProfileData = saveProfileData;
+        window.startNewChat = startNewChat;
+        window.sendMessage = sendMessage;
+        window.openChatFromList = openChatFromList;
+        window.checkAdmin = checkAdmin;
+        window.admGive = admGive;
+
+        // --- ЛОГИКА АВТОРИЗАЦИИ ---
+        function toggleAuthFields() {
+            let m = document.getElementById('auth-method').value;
+            document.getElementById('field-email').style.display = (m === 'email' && authState === 'input') ? 'block' : 'none';
+            document.getElementById('field-phone').style.display = (m === 'phone' && authState === 'input') ? 'block' : 'none';
+        }
+
+        async function handleAuthSubmit() {
+            if(authState === 'input') {
+                let method = document.getElementById('auth-method').value;
+                let loginVal = method === 'email' ? document.getElementById('auth-email').value.trim() : document.getElementById('auth-phone').value.trim();
+                
+                if(!loginVal || loginVal.length < 5) return alert('Введите корректные данные!');
+                
+                // Эмуляция СМС/Почты
+                alert(method === 'email' ? 'Код подтверждения отправлен на вашу почту!' : 'СМС с кодом отправлено на указанный номер!');
+                
+                authState = 'code';
+                document.getElementById('field-email').style.display = 'none';
+                document.getElementById('field-phone').style.display = 'none';
+                document.getElementById('field-code').style.display = 'block';
+                document.getElementById('btn-auth-action').innerText = 'Подтвердить код';
+            } else {
+                let code = document.getElementById('auth-sms-code').value;
+                if(!code) return alert('Введите 4-значный код!');
+
+                let method = document.getElementById('auth-method').value;
+                let loginVal = method === 'email' ? document.getElementById('auth-email').value.trim() : document.getElementById('auth-phone').value.trim();
+                
+                // Заменяем недопустимые символы для путей Firebase (. # $ [ ])
+                let safeId = loginVal.replace(/[\.\#\$\[\]]/g, "_");
+
+                const dbRef = ref(db);
+                try {
+                    let snapshot = await get(child(dbRef, `users/${safeId}`));
+                    if (snapshot.exists()) {
+                        currentUser = snapshot.val();
+                    } else {
+                        // Регистрация нового юзера в облаке Firebase
+                        let cleanUser = "user_" + Math.floor(Math.random()*90000);
+                        currentUser = {
+                            id: safeId,
+                            displayName: "User_" + Math.floor(Math.random()*1000),
+                            username: cleanUser,
+                            premium: false,
+                            business: false,
+                            bText: '',
+                            banned: false,
+                            theme: 'theme-blue',
+                            nft: false
+                        };
+                        await set(ref(db, 'users/' + safeId), currentUser);
+                    }
+
+                    if(currentUser.banned) {
+                        alert('Ваш аккаунт заблокирован администратором!');
+                        location.reload();
+                        return;
+                    }
+
+                    loginSuccess();
+                } catch(error) {
+                    alert("Ошибка базы данных: " + error.message);
+                }
+            }
+        }
+
+        function loginSuccess() {
+            document.getElementById('page-auth').classList.remove('active');
+            document.getElementById('app-nav').style.display = 'flex';
+            switchPage('chats');
+            updateProfileUI();
+            listenToGlobalUpdates();
+        }
+
+        // --- ОБНОВЛЕНИЕ ДАННЫХ И СЛУШАТЕЛИ В РЕАЛЬНОМ ВРЕМЕНИ ---
+        function updateProfileUI() {
+            document.getElementById('my-username-display').innerText = '@' + currentUser.username;
+            document.getElementById('settings-avatar').innerText = currentUser.displayName.charAt(0).toUpperCase();
+            document.getElementById('settings-name-display').innerText = currentUser.displayName;
+            document.getElementById('settings-user-display').innerText = '@' + currentUser.username;
+            document.getElementById('set-display-name').value = currentUser.displayName;
+            document.getElementById('set-username').value = currentUser.username;
             
-            <div style="margin-top: 30px; background: #24303f; padding: 15px; border-radius: 10px;">
-                <h4>Мой профиль:</h4>
-                <p id="profile-stars">⭐ Telegram Stars: 0</p>
-                <p id="profile-gifts">🎁 Подарки: Нет</p>
-                <p id="profile-nft">💎 NFT: Нет</p>
-                <p id="profile-status" style="color: #4caf50;">Статус: Активен</p>
-            </div>
-        </div>
-    </div>
+            document.getElementById('theme-selector').value = currentUser.theme || 'theme-blue';
+            document.body.className = currentUser.theme || 'theme-blue';
 
-    <div id="admin-modal" class="modal">
-        <div class="modal-content">
-            <h3 style="color: #e53935; margin-bottom: 15px;">Панель Создателя</h3>
+            document.getElementById('status-premium').innerText = currentUser.premium ? "Активен ⭐" : "Отключен";
+            document.getElementById('status-premium').style.color = currentUser.premium ? "#9c27b0" : "var(--hint)";
+            document.getElementById('badge-prem-icon').innerText = currentUser.premium ? "⭐" : "";
             
-            <div class="input-group">
-                <label>Кому выдать/изменить (Ник)</label>
-                <input type="text" id="target-user" value="User_Beta">
-            </div>
-
-            <button class="btn" style="background:#ff9800;" onclick="giveStars()">+1000 Звёзд (Stars)</button>
-            <button class="btn" style="background:#9c27b0;" onclick="giveGift()">Подарить Подарок (Gift)</button>
-            <button class="btn" style="background:#00bcd4;" onclick="giveNFT()">Выдать NFT аватара</button>
-            <button class="btn" style="background:#e53935;" onclick="banUser()">Забанить пользователя</button>
+            document.getElementById('status-business').innerText = currentUser.business ? "Активен 💼" : "Отключен";
+            document.getElementById('status-business').style.color = currentUser.business ? "#4caf50" : "var(--hint)";
+            document.getElementById('business-greet').style.display = currentUser.business ? "block" : "none";
+            document.getElementById('business-greet').value = currentUser.bText || '';
             
-            <button class="btn" style="background:#555; margin-top: 20px;" onclick="closeAdmin()">Закрыть</button>
-        </div>
-    </div>
+            if(currentUser.nft) {
+                document.getElementById('settings-avatar').style.borderRadius = "35% 65% 63% 37% / 41% 44% 56% 59%";
+                document.getElementById('settings-avatar').style.background = "linear-gradient(45deg, #00ffcc, #0077ff)";
+            } else {
+                document.getElementById('settings-avatar').style.borderRadius = "50%";
+                document.getElementById('settings-avatar').style.background = "var(--accent)";
+            }
+        }
 
-    <nav>
-        <div class="nav-item active" id="nav-chats" onclick="switchPage('chats')">
-            <span>💬</span>
-            <span>Чаты</span>
-        </div>
-        <div class="nav-item" id="nav-settings" onclick="switchPage('settings')">
-            <span>⚙️</span>
-            <span>Настройки</span>
-        </div>
-    </nav>
+        function listenToGlobalUpdates() {
+            // Следим за изменениями собственного профиля (например, если админ выдал прем)
+            onValue(ref(db, `users/${currentUser.id}`), (snapshot) => {
+                if(snapshot.exists()) {
+                    currentUser = snapshot.val();
+                    if(currentUser.banned) {
+                        alert('Вы были забанены администратором!');
+                        location.reload();
+                    }
+                    updateProfileUI();
+                }
+            });
 
-    <script>
-        // Переключение страниц
-        function switchPage(page) {
+            // Следим за списком чатов на вкладке сообщений
+            onValue(ref(db, 'chats'), (snapshot) => {
+                if(document.getElementById('page-chats').classList.contains('active')) {
+                    renderChatsList(snapshot.val());
+                }
+            });
+        }
+
+        async function saveProfileData() {
+            let newUName = document.getElementById('set-username').value.trim().replace('@','');
+            let newName = document.getElementById('set-display-name').value.trim();
+            let bizText = document.getElementById('business-greet').value;
+            
+            if(!newUName || !newName) return alert('Поля не могут быть пустыми!');
+            
+            // Проверка на уникальность юзернейма в облаке
+            const usersRef = ref(db, 'users');
+            let usersSnap = await get(usersRef);
+            if(usersSnap.exists()) {
+                let allUsers = usersSnap.val();
+                for(let k in allUsers) {
+                    if(allUsers[k].username === newUName && allUsers[k].id !== currentUser.id) {
+                        return alert('Этот юзернейм уже кем-то занят!');
+                    }
+                }
+            }
+
+            let updates = {};
+            updates[`/users/${currentUser.id}/username`] = newUName;
+            updates[`/users/${currentUser.id}/displayName`] = newName;
+            updates[`/users/${currentUser.id}/bText`] = bizText;
+            
+            await update(ref(db), updates);
+            alert('Профиль успешно обновлен!');
+        }
+
+        function changeAppTheme() {
+            let t = document.getElementById('theme-selector').value;
+            document.body.className = t;
+            update(ref(db), { [`/users/${currentUser.id}/theme`]: t });
+        }
+
+        // --- СИСТЕМА ДИАЛОГОВ И ЧАТА ---
+        function switchPage(pageName) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             
-            if(page === 'chats') {
-                document.getElementById('chats-page').classList.add('active');
-                document.getElementById('nav-chats').classList.add('active');
-            } else {
-                document.getElementById('settings-page').classList.add('active');
-                document.getElementById('nav-settings').classList.add('active');
+            document.getElementById('page-' + pageName).classList.add('active');
+            let navBtn = document.getElementById('nv-' + pageName);
+            if(navBtn) navBtn.classList.add('active');
+            
+            if(pageName === 'chats') {
+                activeChatPartner = null;
+                currentChatId = null;
+                get(ref(db, 'chats')).then((snap) => renderChatsList(snap.val()));
             }
         }
 
-        // Вход в админку по твоему паролю
-        function openAdmin() {
-            let password = prompt("Введите секретный админ-пароль:");
-            if (password === "1029384756") {
-                document.getElementById('admin-modal').style.display = 'flex';
-            } else {
-                alert("Неверный пароль доступа!");
+        async function startNewChat() {
+            let search = document.getElementById('search-username').value.trim().replace('@','');
+            if(!search) return;
+            
+            let usersSnap = await get(ref(db, 'users'));
+            if(!usersSnap.exists()) return alert('Пользователи не найдены');
+            
+            let allUsers = usersSnap.val();
+            let found = null;
+            for(let k in allUsers) {
+                if(allUsers[k].username === search) { found = allUsers[k]; break; }
             }
+            
+            if(!found) return alert('Пользователь с таким @username не найден!');
+            if(found.id === currentUser.id) return alert('Нельзя писать самому себе!');
+            
+            openChatWithPartner(found);
         }
 
-        function closeAdmin() {
-            document.getElementById('admin-modal').style.display = 'none';
-        }
-
-        // Логика Админки
-        function giveStars() {
-            document.getElementById('profile-stars').innerText = "⭐ Telegram Stars: 1000";
-            alert("1000 Звёзд успешно начислены игроку " + document.getElementById('target-user').value);
-        }
-
-        function giveGift() {
-            document.getElementById('profile-gifts').innerText = "🎁 Подарки: Ретро Автомобиль [Premium]";
-            alert("Подарок отправлен!");
-        }
-
-        function giveNFT() {
-            document.getElementById('profile-nft').innerText = "💎 NFT: TON Telegram Username #8472";
-            alert("NFT успешно привязано к аккаунту!");
-        }
-
-        function banUser() {
-            document.getElementById('profile-status').innerText = "Статус: ЗАБАНЕН";
-            document.getElementById('profile-status').style.color = "#e53935";
-            alert("Пользователь " + document.getElementById('target-user').value + " забанен в системе!");
-        }
-
-        // Переключение языков (RU/EN)
-        function changeLanguage() {
-            let lang = document.getElementById('lang-select').value;
-            if(lang === 'en') {
-                document.getElementById('header-title').innerText = "xgram Beta";
-                document.getElementById('nav-chats').children[1].innerText = "Chats";
-                document.getElementById('nav-settings').children[1].innerText = "Settings";
-            } else {
-                document.getElementById('header-title').innerText = "xgram";
-                document.getElementById('nav-chats').children[1].innerText = "Чаты";
-                document.getElementById('nav-settings').children[1].innerText = "Настройки";
+        function openChatWithPartner(partner) {
+            activeChatPartner = partner;
+            // Генерируем уникальный ID комнаты (сортируем строки для идентичности путей)
+            currentChatId = currentUser.id < partner.id ? `${currentUser.id}_${partner.id}` : `${partner.id}_${currentUser.id}`;
+            
+            switchPage('dialog');
+            document.getElementById('chat-with-title').innerText = partner.displayName + " (@" + partner.username + ")";
+            
+            // Если включен Бизнес — отправляем автоприветствие (локальная проверка при первом входе)
+            if(partner.business && partner.bText) {
+                get(ref(db, `chats/${currentChatId}`)).then((snap) => {
+                    if(!snap.exists()) { // Если чат абсолютно новый
+                        let newMsgRef = push(ref(db, `chats/${currentChatId}/messages`));
+                        set(newMsgRef, {
+                            from: partner.username,
+                            text: "[Бизнес Автоответ]: " + partner.bText,
+                            time: Date.now()
+                        });
+                    }
+                });
             }
+
+            // Слушаем сообщения конкретно в этой комнате
+            onValue(ref(db, `chats/${currentChatId}/messages`), (snapshot) => {
+                if(currentChatId) renderMessages(snapshot.val());
+            });
         }
-    </script>
-</body>
-</html>
+
+        function sendMessage() {
+            let text = document.getElementById('message-input').value.trim();
+            if(!text || !currentChatId) return;
+            
+            let messagesRef = ref(db, `chats/${currentChatId}/messages`);
+            let newMsgRef = push(messagesRef);
+            
+            set(newMsgRef, {
+                from: currentUser.username,
+                text: text,
+                time: Date.now()
+            });
+            
+            // Записываем метаданные чата, чтобы он отображался в списке диалогов
+            update(ref(db, `chats/${currentChatId}/meta`), {
+                user1: currentUser.username,
+                user2: activeChatPartner.username,
+                lastUpdate: Date.now()
+            });
+
+            document.getElementById('message-input').value = '';
+        }
+
+        function renderMessages(messagesObj) {
+            let box = document.getElementById('chat-messages-box');
+            if(!messagesObj) { box.innerHTML = ''; return; }
+            
+            let html = '';
+            Object.keys(messagesObj).forEach(key => {
+                let m = messagesObj[key];
+                let side = m.from === currentUser.username ? 'out' : 'in';
+                html += `<div class="msg ${side}">${m.text}</div>`;
+            });
+            box.innerHTML = html;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function renderChatsList(allChatsObj) {
+            let container = document.getElementById('chats-list-container');
+            if(!allChatsObj) { 
+                container.innerHTML = '<p style="text-align:center; color:var(--hint); margin-top:20px;">Нет активных диалогов. Найдите друга по юзернейму через поиск!</p>';
+                return; 
+            }
+            
+            let html = '';
+            // Нам нужно найти чаты, где фигурирует имя текущего пользователя
+            Object.keys(allChatsObj).forEach(chatId => {
+                let meta = allChatsObj[chatId].meta;
+                if(meta && (meta.user1 === currentUser.username || meta.user2 === currentUser.username)) {
+                    let partnerUsername = meta.user1 === currentUser.username ? meta.user2 : meta.user1;
+                    
+                    html += `
+                        <div class="item-card" onclick="openChatFromList('${partnerUsername}')">
+                            <div class="avatar">${partnerUsername.charAt(0).toUpperCase()}</div>
+                            <div>
+                                <strong>@${partnerUsername}</strong>
+                                <p style="font-size:13px; color:var(--hint);">Открыть историю диалога</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            container.innerHTML = html || '<p style="text-align:center; color:var(--hint); margin-top:20px;">Нет активных диалогов. Найдите друга по юзернейму через поиск!</p>';
+        }
+
+        async function openChatFromList(partnerUsername) {
+          
