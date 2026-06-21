@@ -1,39 +1,24 @@
-/**
- * UI Controller
- * Управление отображением и реакцией на клики
- */
-
 const UI = {
     navigate(pageId) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        const el = document.getElementById('p-' + pageId);
-        if(el) el.classList.add('active');
+        document.getElementById('page-' + pageId).classList.add('active');
     },
 
-    renderChatList(chats, myId, onClickCallback) {
+    renderChats(chats, onClick) {
         const list = document.getElementById('chat-list');
-        list.innerHTML = '';
-        Object.keys(chats).forEach(id => {
-            if(id.includes(myId)) {
-                const div = document.createElement('div');
-                div.className = 'chat-card';
-                div.innerText = 'Чат: ' + id.replace(myId, '').replace('_', '');
-                div.onclick = () => onClickCallback(id);
-                list.appendChild(div);
-            }
-        });
+        list.innerHTML = chats.map(c => `
+            <div class="chat-item" onclick="App.openChat(${c.id}, '${c.name}')">
+                <div class="avatar">${c.name[0]}</div>
+                <div><b>${c.name}</b><br><small>${c.last}</small></div>
+            </div>
+        `).join('');
     },
 
-    renderMessages(msgs, myId) {
-        const area = document.getElementById('msg-list');
-        area.innerHTML = '';
-        Object.keys(msgs).forEach(key => {
-            const m = msgs[key];
-            const div = document.createElement('div');
-            div.className = `msg-bubble ${m.from === myId ? 'msg-out' : 'msg-in'}`;
-            div.innerText = m.text;
-            area.appendChild(div);
-        });
-        area.scrollTop = area.scrollHeight;
+    renderMessages(msgs) {
+        const list = document.getElementById('msg-list');
+        list.innerHTML = msgs.map(m => `
+            <div class="msg ${m.from}">${m.text}</div>
+        `).join('');
+        list.scrollTop = list.scrollHeight;
     }
 };
