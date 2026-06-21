@@ -1,62 +1,36 @@
-/**
- * XGram Main Application Entry Point
- * Главный файл, запускающий жизненный цикл приложения
- */
-
 const App = {
-    user: { id: localStorage.getItem(APP_CONFIG.SYSTEM.STORAGE_KEY) },
-    activeChat: null,
+    activeChatId: null,
 
     init() {
-        API.init();
-        
-        // Telegram WebApp Setup
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-
-        this.bindEvents();
-
-        if (this.user.id) {
-            UI.navigate('chats');
-            this.loadChats();
+        UI.renderChats(DB.chats);
+        if(window.Telegram?.WebApp) {
+            window.Telegram.WebApp.ready();
+            window.Telegram.WebApp.expand();
         }
     },
 
-    bindEvents() {
-        document.getElementById('btn-login').onclick = () => {
-            const id = document.getElementById('inp-login').value;
-            if(!id) return;
-            localStorage.setItem(APP_CONFIG.SYSTEM.STORAGE_KEY, id);
-            this.user.id = id;
-            UI.navigate('chats');
-            this.loadChats();
-        };
-
-        document.getElementById('btn-send').onclick = () => {
-            const txt = document.getElementById('inp-msg').value;
-            if(!txt || !this.activeChat) return;
-            API.push(`chats/${this.activeChat}/msgs`, { from: this.user.id, text: txt });
-            document.getElementById('inp-msg').value = '';
-        };
+    openChat(id, name) {
+        this.activeChatId = id;
+        document.getElementById('chat-title').innerText = name;
+        UI.renderMessages(DB.msgs[id] || []);
+        UI.navigate('chat');
     },
 
-    loadChats() {
-        API.subscribe('chats', (data) => {
-            UI.renderChatList(data, this.user.id, (chatId) => {
-                this.activeChat = chatId;
-                UI.navigate('dialog');
-                this.loadMessages();
-            });
+    sendMessage() {
+        const input = document.getElementById('msg-input');
+        if(!input.value) return;
+        
+        if(!DB.msgs[this.activeChatId]) DB.msgs[this.activeChatId] = [];
+        
+        DB.msgs[this.activeChatId].push({
+            text: input.value,
+            from: 'me',
+            time: new Date().toLocaleTimeString()
         });
-    },
-
-    loadMessages() {
-        API.subscribe(`chats/${this.activeChat}/msgs`, (msgs) => {
-            UI.renderMessages(msgs, this.user.id);
-        });
+        
+        input.value = '';
+        UI.renderMessages(DB.msgs[this.activeChatId]);
     }
 };
 
-// Запуск системы
 document.addEventListener('DOMContentLoaded', () => App.init());
