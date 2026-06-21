@@ -3,452 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>XGram Enterprise System - Core Build</title>
+    <title>XGram Enterprise System</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-
-    <style>
-        /* -------------------------------------------------------------------------
-           CSS ARCHITECTURE: CORE VARIABLE DEFINITIONS
-           Variables ensure consistent theming across all components.
-           ------------------------------------------------------------------------- */
-        :root {
-            --tg-bg-color: var(--tg-theme-bg-color, #ffffff);
-            --tg-text-color: var(--tg-theme-text-color, #000000);
-            --tg-accent-color: var(--tg-theme-button-color, #2481cc);
-            --tg-accent-text: var(--tg-theme-button-text-color, #ffffff);
-            --tg-hint-color: var(--tg-theme-hint-color, #999999);
-            --radius-xs: 4px;
-            --radius-sm: 8px;
-            --radius-md: 16px;
-            --radius-lg: 24px;
-            --shadow-soft: 0 4px 12px rgba(0,0,0,0.05);
-            --transition-speed: 0.3s;
-        }
-
-        /* -------------------------------------------------------------------------
-           CSS ARCHITECTURE: RESET & GLOBAL LAYOUT
-           ------------------------------------------------------------------------- */
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            -webkit-tap-highlight-color: transparent; 
-        }
-
-        body { 
-            background: var(--tg-bg-color); 
-            color: var(--tg-text-color); 
-            height: 100vh; 
-            width: 100vw;
-            overflow: hidden; 
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* -------------------------------------------------------------------------
-           CSS ARCHITECTURE: PAGE ENGINE
-           The engine manages display state via the .active class.
-           ------------------------------------------------------------------------- */
-        .app-shell { 
-            width: 100%; 
-            height: 100%; 
-            position: relative; 
-        }
-
-        .page { 
-            display: none; 
-            height: 100%; 
-            width: 100%; 
-            flex-direction: column; 
-            padding: 20px; 
-            animation: slide-up var(--transition-speed) ease-out; 
-        }
-
-        .page.active { 
-            display: flex; 
-        }
-
-        @keyframes slide-up { 
-            from { opacity: 0; transform: translateY(15px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
-
-        /* -------------------------------------------------------------------------
-           CSS ARCHITECTURE: UI COMPONENTS
-           ------------------------------------------------------------------------- */
-        .header-title { 
-            font-size: 28px; 
-            font-weight: 800; 
-            margin-bottom: 24px; 
-            color: var(--tg-text-color); 
-        }
-
-        .input-box { 
-            width: 100%; 
-            padding: 18px; 
-            background: rgba(0,0,0,0.05); 
-            border: none; 
-            border-radius: var(--radius-md); 
-            color: var(--tg-text-color); 
-            font-size: 16px; 
-            margin-bottom: 12px; 
-            transition: outline var(--transition-speed);
-        }
-
-        .input-box:focus { 
-            outline: 2px solid var(--tg-accent-color); 
-        }
-
-        .action-button { 
-            width: 100%; 
-            padding: 18px; 
-            border: none; 
-            border-radius: var(--radius-md); 
-            font-weight: 700; 
-            cursor: pointer; 
-            transition: transform var(--transition-speed), background var(--transition-speed); 
-            background: var(--tg-accent-color); 
-            color: var(--tg-accent-text); 
-            text-align: center;
-        }
-
-        .action-button:active { 
-            transform: scale(0.98); 
-        }
-
-        .btn-secondary { 
-            background: rgba(0,0,0,0.05); 
-            color: var(--tg-text-color); 
-            margin-top: 10px;
-        }
-
-        .btn-danger { 
-            background: #ff3b30; 
-            color: white; 
-        }
-
-        /* -------------------------------------------------------------------------
-           CSS ARCHITECTURE: CHAT & MESSAGING
-           ------------------------------------------------------------------------- */
-        .chat-scroll-container { 
-            flex: 1; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-        }
-
-        .chat-card { 
-            padding: 18px; 
-            background: rgba(0,0,0,0.03); 
-            border-radius: var(--radius-md); 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            cursor: pointer;
-        }
-
-        .chat-card:hover { 
-            background: rgba(0,0,0,0.06); 
-        }
-
-        .message-stream { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 10px 0; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 8px; 
-        }
-
-        .msg-bubble { 
-            padding: 12px 16px; 
-            border-radius: 18px; 
-            max-width: 85%; 
-            font-size: 15px; 
-            position: relative;
-        }
-
-        .msg-in { 
-            background: rgba(0,0,0,0.08); 
-            align-self: flex-start; 
-            border-bottom-left-radius: 4px; 
-        }
-
-        .msg-out { 
-            background: var(--tg-accent-color); 
-            color: var(--tg-accent-text); 
-            align-self: flex-end; 
-            border-bottom-right-radius: 4px; 
-        }
-    </style>
+    
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="app-shell">
+        
         <div id="p-auth" class="page active">
-            <div style="margin: auto; width: 100%; max-width: 400px;">
-                <div class="header-title">XGram Terminal</div>
-                <input type="text" id="inp-login" class="input-box" placeholder="Enter System ID">
-                <button id="btn-login" class="action-button">Authorize Session</button>
+            <div style="margin: auto; width: 100%;">
+                <h1 class="header-title">XGram Login</h1>
+                <input type="text" id="inp-login" class="ui-input" placeholder="Введите User ID">
+                <button id="btn-login" class="ui-btn">Войти в систему</button>
             </div>
         </div>
 
         <div id="p-chats" class="page">
-            <div class="header-title">Active Channels</div>
-            <div id="chat-list" class="chat-scroll-container"></div>
-            <div style="margin-top: 20px;">
-                <input type="text" id="inp-search" class="input-box" placeholder="Target User ID">
-                <button id="btn-start" class="action-button">Initiate Connection</button>
-                <button onclick="Kernel.UI.navigate('settings')" class="action-button btn-secondary">Settings</button>
+            <h2 class="header-title">Ваши чаты</h2>
+            <div id="chat-list" class="chat-container"></div>
+            <div style="margin-top: auto;">
+                <input type="text" id="inp-search" class="ui-input" placeholder="ID собеседника">
+                <button id="btn-start" class="ui-btn">Начать диалог</button>
             </div>
         </div>
 
         <div id="p-dialog" class="page">
-            <button id="btn-back" class="action-button btn-secondary" style="width: auto; padding: 10px 20px; margin-bottom:10px;">← Return</button>
-            <div id="msg-list" class="message-stream"></div>
+            <button id="btn-back" class="ui-btn" style="background: transparent; color: var(--accent);">← Назад</button>
+            <div id="msg-list" class="msg-container"></div>
             <div style="display: flex; gap: 8px;">
-                <input type="text" id="inp-msg" class="input-box" style="margin:0;">
-                <button id="btn-send" class="action-button" style="width: 80px;">Send</button>
+                <input type="text" id="inp-msg" class="ui-input" style="margin:0;">
+                <button id="btn-send" class="ui-btn" style="width: 80px; margin:0;">Send</button>
             </div>
         </div>
 
-        <div id="p-settings" class="page">
-            <div class="header-title">Configuration</div>
-            <button onclick="Kernel.Auth.logout()" class="action-button btn-danger">Terminate & Clear Cache</button>
-            <button onclick="Kernel.UI.navigate('chats')" class="action-button btn-secondary" style="margin-top:10px;">Return to Dashboard</button>
-        </div>
     </div>
 
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script src="ui.js"></script>
+    <script src="app.js"></script>
+
     <script>
-        /** * -------------------------------------------------------------------------
-         * KERNEL OBJECT: THE CENTRALIZED CONTROLLER
-         * This object holds the entire runtime logic for the XGram messaging engine.
-         * Pattern: Singleton Module
-         * -------------------------------------------------------------------------
-         */
-        const Kernel = {
-            /** * @property {Object} CONFIG - Application environment constants.
-             */
-            CONFIG: {
-                FIREBASE_API_KEY: "AIzaSyAUFvEAHdIbYvflB7n-DMQXM_ydZcuT35o",
-                FIREBASE_PROJECT_ID: "jwbsjadh",
-                FIREBASE_DB_URL: "https://jwbsjadh-default-rtdb.firebaseio.com/",
-                VERSION: "4.0.0-stable",
-                BUILD: 1024
-            },
-
-            /** * @property {Object} State - Runtime data model.
-             */
-            State: {
-                user: { id: localStorage.getItem('x_uid') || null },
-                activeChat: null,
-                isInitialized: false,
-                cache: {}
-            },
-
-            /** * @function Initialize - Core system boot sequence.
-             * Sets up Firebase, Telegram SDK, and event listeners.
-             */
-            async Initialize() {
-                try {
-                    this.Log("Bootstrapping Kernel v" + this.CONFIG.VERSION);
-                    
-                    // Firebase initialization
-                    firebase.initializeApp({
-                        apiKey: this.CONFIG.FIREBASE_API_KEY,
-                        projectId: this.CONFIG.FIREBASE_PROJECT_ID,
-                        databaseURL: this.CONFIG.FIREBASE_DB_URL
-                    });
-                    this.DB = firebase.database();
-                    
-                    // Telegram SDK integration
-                    this.TG = window.Telegram.WebApp;
-                    this.TG.ready();
-                    this.TG.expand();
-
-                    // Module registration
-                    this.UI.BindEvents();
-                    
-                    if (this.State.user.id) {
-                        this.UI.navigate('chats');
-                        this.Data.SyncChats();
-                    }
-                    
-                    this.State.isInitialized = true;
-                    this.Log("Kernel operational.");
-                } catch (e) {
-                    this.Error("Initialization failure", e);
-                }
-            },
-
-            Log: (msg) => console.log(`[XGram::${new Date().toISOString()}] ${msg}`),
-            Error: (msg, err) => console.error(`[XGram::CRITICAL::${msg}]`, err),
-
-            /** * @module Auth - User credential management.
-             */
-            Auth: {
-                login(id) {
-                    Kernel.State.user.id = id;
-                    localStorage.setItem('x_uid', id);
-                    Kernel.UI.navigate('chats');
-                    Kernel.Data.SyncChats();
-                },
-                logout() {
-                    localStorage.removeItem('x_uid');
-                    location.reload();
-                }
-            },
-
-            /** * @module UI - Interface manipulation layer.
-             * Handles page transitions and DOM event delegation.
-             */
-            UI: {
-                navigate(pid) {
-                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                    const page = document.getElementById('p-' + pid);
-                    if(page) page.classList.add('active');
-                },
-                
-                BindEvents() {
-                    document.getElementById('btn-login').onclick = () => {
-                        const val = document.getElementById('inp-login').value;
-                        if(val) Kernel.Auth.login(val);
-                    };
-                    document.getElementById('btn-start').onclick = () => {
-                        const target = document.getElementById('inp-search').value;
-                        if(target) {
-                            Kernel.State.activeChat = [Kernel.State.user.id, target].sort().join('_');
-                            Kernel.UI.navigate('dialog');
-                            Kernel.Data.SyncMessages();
-                        }
-                    };
-                    document.getElementById('btn-send').onclick = () => {
-                        const msg = document.getElementById('inp-msg').value;
-                        if(msg) Kernel.Data.SendMessage(msg);
-                    };
-                    document.getElementById('btn-back').onclick = () => Kernel.UI.navigate('chats');
-                }
-            },
-
-            /** * @module Data - Transactional layer for Database I/O.
-             * Handles real-time synchronization with Firebase.
-             */
-            Data: {
-                SyncChats() {
-                    Kernel.DB.ref('chats').on('value', (snap) => {
-                        const list = document.getElementById('chat-list');
-                        list.innerHTML = '';
-                        const data = snap.val() || {};
-                        
-                        Object.keys(data).forEach(key => {
-                            if(key.includes(Kernel.State.user.id)) {
-                                const card = document.createElement('div');
-                                card.className = 'chat-card';
-                                card.innerHTML = `<span>Session: ${key.replace(Kernel.State.user.id, '').replace('_', '')}</span>`;
-                                card.onclick = () => {
-                                    Kernel.State.activeChat = key;
-                                    Kernel.UI.navigate('dialog');
-                                    Kernel.Data.SyncMessages();
-                                };
-                                list.appendChild(card);
-                            }
-                        });
-                    });
-                },
-
-                SyncMessages() {
-                    const area = document.getElementById('msg-list');
-                    area.innerHTML = '';
-                    
-                    Kernel.DB.ref('chats/' + Kernel.State.activeChat + '/msgs').on('child_added', (snap) => {
-                        const d = snap.val();
-                        const div = document.createElement('div');
-                        div.className = 'msg-bubble ' + (d.from === Kernel.State.user.id ? 'msg-out' : 'msg-in');
-                        div.innerText = d.text;
-                        area.appendChild(div);
-                        area.scrollTop = area.scrollHeight;
-                    });
-                },
-
-                SendMessage(text) {
-                    Kernel.DB.ref('chats/' + Kernel.State.activeChat + '/msgs').push({
-                        from: Kernel.State.user.id,
-                        text: text,
-                        timestamp: Date.now()
-                    });
-                    document.getElementById('inp-msg').value = '';
-                }
-            }
-        };
-
-        /* -------------------------------------------------------------------------
-           BOOTSTRAP SEQUENCE
-           ------------------------------------------------------------------------- */
-        Kernel.Initialize();
-
-        /**
-         * -------------------------------------------------------------------------
-         * ENTERPRISE EXPANSION MODULE (RESERVED)
-         * These stubs ensure the system is ready for rapid feature development.
-         * -------------------------------------------------------------------------
-         */
-        
-        const SecurityController = {
-            Validate: (str) => typeof str === 'string' && str.length < 5000,
-            Sanitize: (str) => str.replace(/</g, "&lt;").replace(/>/g, "&gt;")
-        };
-
-        const NetworkMonitor = {
-            Ping: () => { /* Logic to check connection quality */ },
-            NotifyLoss: () => { /* Logic to alert user */ }
-        };
-
-        // Utility: Generate randomized session keys
-        const IDGenerator = () => Math.random().toString(36).substring(7);
-
-        // Reserved Logic Blocks for future microservices
-        const FeatureFlags = {
-            FILE_UPLOAD: false,
-            VOICE_MESSAGES: false,
-            ENCRYPTION: true,
-            DARK_MODE_AUTO: true
-        };
-
-        // System Health Check Loop
-        setInterval(() => {
-            if(Kernel.State.isInitialized) {
-                // Background tasks, telemetry, etc.
-            }
-        }, 10000);
-
-        /**
-         * -------------------------------------------------------------------------
-         * DOCUMENTATION & LEGACY SUPPORT
-         * -------------------------------------------------------------------------
-         * Below are utility methods and legacy support structures that enable 
-         * the system to scale without architectural regression.
-         */
-
-        const Utilities = {
-            ParseTimestamp: (ts) => new Date(ts).toLocaleTimeString(),
-            Debounce: (fn, delay) => { let timer; return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay); } },
-            DeepClone: (obj) => JSON.parse(JSON.stringify(obj))
-        };
-
-        // Placeholder for future extensibility (e.g., custom themes or plugins)
-        function registerPlugin(name, callback) {
-            Kernel.Log("Plugin registered: " + name);
-        }
-
-        // Final runtime injection
-        window.onload = () => {
-            Kernel.Log("Runtime Environment: " + navigator.userAgent);
-        };
+        // Служебный скрипт для предотвращения ошибок загрузки
+        window.addEventListener('error', (event) => {
+            console.error("Critical System Error:", event.message);
+        });
     </script>
 </body>
 </html>
