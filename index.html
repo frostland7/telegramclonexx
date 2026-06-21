@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xgram Beta</title>
+    <style>
+        :root {
+            --tg-theme-bg: #0e1621;
+            --tg-theme-text: #ffffff;
+            --tg-theme-hint: #708499;
+            --tg-theme-button: #2481cc;
+            --tg-theme-item-bg: #17212b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--tg-theme-bg);
+            color: var(--tg-theme-text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Шапка */
+        header {
+            background-color: var(--tg-theme-item-bg);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #101921;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .admin-btn {
+            background: #e53935;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* Контент и вкладки */
+        .container {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 60px;
+        }
+
+        .page {
+            display: none;
+            padding: 15px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Стили чатов */
+        .chat-item {
+            background: var(--tg-theme-item-bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--tg-theme-button);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Кнопки настроек и админки */
+        .btn {
+            background: var(--tg-theme-button);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--tg-theme-hint);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            background: var(--tg-theme-item-bg);
+            border: 1px solid #24303f;
+            color: white;
+            border-radius: 8px;
+        }
+
+        /* Нижнее меню */
+        nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: var(--tg-theme-item-bg);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            border-top: 1px solid #101921;
+        }
+
+        .nav-item {
+            color: var(--tg-theme-hint);
+            text-decoration: none;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            color: var(--tg-theme-button);
+        }
+
+        /* Админ панель модалка */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: var(--tg-theme-item-bg);
+            padding: 20px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <span id="header-title">xgram</span>
+        <button class="admin-btn" onclick="openAdmin()">Admin</button>
+    </header>
+
+    <div class="container">
+        <div id="chats-page" class="page active">
+            <div class="chat-item">
+                <div class="avatar">Р</div>
+                <div>
+                    <h4>Разработчик (Ты)</h4>
+                    <p style="color: var(--tg-theme-hint); font-size: 14px;">Добро пожаловать в xgram!</p>
+                </div>
+            </div>
+            <div class="chat-item">
+                <div class="avatar" style="background: #4caf50;">X</div>
+                <div>
+                    <h4>xgram Новости</h4>
+                    <p style="color: var(--tg-theme-hint); font-size: 14px;">Бета-тест запущен успешно.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="settings-page" class="page">
+            <h3 style="margin-bottom: 20px;">Настройки аккаунта</h3>
+            <div class="input-group">
+                <label>Имя пользователя</label>
+                <input type="text" id="username-input" value="User_Beta">
+            </div>
+            <div class="input-group">
+                <label>Язык / Language</label>
+                <select id="lang-select" onchange="changeLanguage()">
+                    <option value="ru">Русский</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+            <button class="btn" onclick="alert('Настройки сохранены!')">Сохранить</button>
+            
+            <div style="margin-top: 30px; background: #24303f; padding: 15px; border-radius: 10px;">
+                <h4>Мой профиль:</h4>
+                <p id="profile-stars">⭐ Telegram Stars: 0</p>
+                <p id="profile-gifts">🎁 Подарки: Нет</p>
+                <p id="profile-nft">💎 NFT: Нет</p>
+                <p id="profile-status" style="color: #4caf50;">Статус: Активен</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="color: #e53935; margin-bottom: 15px;">Панель Создателя</h3>
+            
+            <div class="input-group">
+                <label>Кому выдать/изменить (Ник)</label>
+                <input type="text" id="target-user" value="User_Beta">
+            </div>
+
+            <button class="btn" style="background:#ff9800;" onclick="giveStars()">+1000 Звёзд (Stars)</button>
+            <button class="btn" style="background:#9c27b0;" onclick="giveGift()">Подарить Подарок (Gift)</button>
+            <button class="btn" style="background:#00bcd4;" onclick="giveNFT()">Выдать NFT аватара</button>
+            <button class="btn" style="background:#e53935;" onclick="banUser()">Забанить пользователя</button>
+            
+            <button class="btn" style="background:#555; margin-top: 20px;" onclick="closeAdmin()">Закрыть</button>
+        </div>
+    </div>
+
+    <nav>
+        <div class="nav-item active" id="nav-chats" onclick="switchPage('chats')">
+            <span>💬</span>
+            <span>Чаты</span>
+        </div>
+        <div class="nav-item" id="nav-settings" onclick="switchPage('settings')">
+            <span>⚙️</span>
+            <span>Настройки</span>
+        </div>
+    </nav>
+
+    <script>
+        // Переключение страниц
+        function switchPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            if(page === 'chats') {
+                document.getElementById('chats-page').classList.add('active');
+                document.getElementById('nav-chats').classList.add('active');
+            } else {
+                document.getElementById('settings-page').classList.add('active');
+                document.getElementById('nav-settings').classList.add('active');
+            }
+        }
+
+        // Вход в админку по твоему паролю
+        function openAdmin() {
+            let password = prompt("Введите секретный админ-пароль:");
+            if (password === "1029384756") {
+                document.getElementById('admin-modal').style.display = 'flex';
+            } else {
+                alert("Неверный пароль доступа!");
+            }
+        }
+
+        function closeAdmin() {
+            document.getElementById('admin-modal').style.display = 'none';
+        }
+
+        // Логика Админки
+        function giveStars() {
+            document.getElementById('profile-stars').innerText = "⭐ Telegram Stars: 1000";
+            alert("1000 Звёзд успешно начислены игроку " + document.getElementById('target-user').value);
+        }
+
+        function giveGift() {
+            document.getElementById('profile-gifts').innerText = "🎁 Подарки: Ретро Автомобиль [Premium]";
+            alert("Подарок отправлен!");
+        }
+
+        function giveNFT() {
+            document.getElementById('profile-nft').innerText = "💎 NFT: TON Telegram Username #8472";
+            alert("NFT успешно привязано к аккаунту!");
+        }
+
+        function banUser() {
+            document.getElementById('profile-status').innerText = "Статус: ЗАБАНЕН";
+            document.getElementById('profile-status').style.color = "#e53935";
+            alert("Пользователь " + document.getElementById('target-user').value + " забанен в системе!");
+        }
+
+        // Переключение языков (RU/EN)
+        function changeLanguage() {
+            let lang = document.getElementById('lang-select').value;
+            if(lang === 'en') {
+                document.getElementById('header-title').innerText = "xgram Beta";
+                document.getElementById('nav-chats').children[1].innerText = "Chats";
+                document.getElementById('nav-settings').children[1].innerText = "Settings";
+            } else {
+                document.getElementById('header-title').innerText = "xgram";
+                document.getElementById('nav-chats').children[1].innerText = "Чаты";
+                document.getElementById('nav-settings').children[1].innerText = "Настройки";
+            }
+        }
+    </script>
+</body>
+</html>
