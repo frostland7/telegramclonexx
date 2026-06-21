@@ -1,0 +1,89 @@
+/* * XGram Pro | Style Module v1.0.0
+ * Содержит дизайн-систему приложения
+ */
+
+:root {
+    --bg-primary: var(--tg-theme-bg-color, #ffffff);
+    --text-primary: var(--tg-theme-text-color, #000000);
+    --accent: var(--tg-theme-button-color, #2481cc);
+    --accent-txt: var(--tg-theme-button-text-color, #ffffff);
+    --hint: var(--tg-theme-hint-color, #999999);
+    --radius: 16px;
+    --anim-speed: 0.3s;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+    transition: background var(--anim-speed);
+}
+
+.page {
+    display: none;
+    height: 100vh;
+    width: 100%;
+    padding: 20px;
+    flex-direction: column;
+    animation: fade-in var(--anim-speed) ease;
+}
+
+.page.active { display: flex; }
+
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.ui-btn {
+    width: 100%;
+    padding: 18px;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--accent);
+    color: var(--accent-txt);
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: transform 0.1s;
+}
+
+.ui-btn:active { transform: scale(0.98); }
+
+.ui-input {
+    width: 100%;
+    padding: 18px;
+    background: rgba(0,0,0,0.05);
+    border: none;
+    border-radius: var(--radius);
+    color: var(--text-primary);
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+.chat-card {
+    padding: 16px;
+    background: rgba(0,0,0,0.03);
+    border-radius: var(--radius);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.msg-bubble {
+    padding: 12px 16px;
+    border-radius: 18px;
+    max-width: 80%;
+    margin-bottom: 8px;
+}
+
+.msg-in { background: rgba(0,0,0,0.08); align-self: flex-start; }
+.msg-out { background: var(--accent); color: var(--accent-txt); align-self: flex-end; }
